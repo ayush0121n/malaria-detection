@@ -447,42 +447,6 @@ The following charts are automatically generated during training:
 
 ---
 
-## 🔍 Troubleshooting
-
-### ❌ `ModuleNotFoundError: No module named 'flask'`
-```bash
-pip install -r requirements.txt
-```
-
-### ❌ `No .h5 file found` when starting `app.py`
-Either run the training script first, or make sure the `.h5` files are in the **same directory** as `app.py`:
-```bash
-python malaria_detection.py   # trains and saves .h5 files
-python app.py                 # then start the web app
-```
-
-### ❌ Kaggle download fails — `403 Forbidden`
-Your `kaggle.json` is missing or invalid. Follow [Step 4](#step-4--configure-kaggle-api-credentials) above.
-
-### ❌ Emoji/Unicode characters show as `?` on Windows terminal
-The code already handles this automatically using UTF-8 reconfiguration. If you still see issues, run:
-```bash
-set PYTHONIOENCODING=utf-8
-python app.py
-```
-
-### ❌ `Address already in use` on port 5000
-Another process is using port 5000. Either stop it or change the port in `app.py`:
-```python
-app.run(debug=True, host="127.0.0.1", port=5001, use_reloader=False)
-```
-
-### ❌ EfficientNetB0 shows ~50% accuracy
-This is expected when the base is fully frozen at 64×64 input. To improve:
-1. Increase `IMG_SIZE` to `(128, 128)` or `(224, 224)`
-2. Partially unfreeze the top layers of EfficientNetB0 for fine-tuning
-
----
 
 ## 📜 License
 
@@ -506,6 +470,5 @@ MIT License  ©  2026  Ayush Narkhede
 
 **🔬 MalariaScope — Saving Lives Through Technology**
 
-*Built with TensorFlow, Flask & ❤️*
 
 </div>
