@@ -14,24 +14,21 @@ venv/
 env/
 .env/
 .venv/
+ENV/
 
 # ── Jupyter ──────────────────────────────────────────────
 .ipynb_checkpoints/
+*.ipynb
 
-# ── Large model files (tracked via Git LFS or excluded) ──
-# Uncomment the line below to EXCLUDE model files entirely,
-# or run: git lfs track "*.h5" to track them with Git LFS
-# *.h5
-
-# ── Dataset / temp / OS ──────────────────────────────────
-*.csv
+# ── Dataset / temp ───────────────────────────────────────
 *.zip
 *.tar.gz
+*.tar
+
+# ── OS / IDE ─────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# ── IDE ──────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
@@ -40,3 +37,10 @@ desktop.ini
 # ── Flask / deployment ───────────────────────────────────
 instance/
 .webassets-cache
+
+# ── Environment variables ─────────────────────────────────
+.env
+*.env
+
+# ── Kaggle credentials (NEVER commit) ────────────────────
+kaggle.json
