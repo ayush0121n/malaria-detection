@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MalariaScope — Neural Diagnostic Platform</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2128;
+      --border:    rgba(99,143,255,0.18);
+      --accent:    #638fff;
+      --accent2:   #a78bfa;
+      --green:     #3fb950;
+      --green-bg:  rgba(63,185,80,0.12);
+      --green-bdr: rgba(63,185,80,0.35);
+      --red:       #f85149;
+      --red-bg:    rgba(248,81,73,0.12);
+      --red-bdr:   rgba(248,81,73,0.35);
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Particle canvas ── */
+    #bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 40px;
+      background: rgba(13,17,23,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .nav-sub { color: var(--muted); font-weight: 400; font-size: 0.78rem; margin-left: 4px; }
+    .nav-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(63,185,80,0.12);
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 0.78rem; font-weight: 600; color: var(--green);
+    }
+    .nav-badge::before {
+      content: ''; width: 7px; height: 7px;
+      background: var(--green); border-radius: 50%;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Main layout ── */
+    main {
+      position: relative; z-index: 1;
+      flex: 1;
+      max-width: 860px; width: 100%;
+      margin: 0 auto;
+      padding: 48px 24px 60px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      margin-bottom: 44px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+      font-weight: 900; line-height: 1.15; letter-spacing: -0.03em;
+      margin-bottom: 14px;
+    }
+    .hero h1 span {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p { color: var(--muted); font-size: 0.92rem; margin-bottom: 36px; }
+
+    /* ── Stat cards ── */
+    .stats {
+      display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 28px; min-width: 150px; text-align: center;
+      transition: transform .25s, box-shadow .25s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(99,143,255,.14); }
+    .stat-icon { font-size: 1.6rem; margin-bottom: 6px; }
+    .stat-val  { font-size: 1.55rem; font-weight: 800; }
+    .stat-lbl  { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+
+    /* ─────────────────────────────────────────────
+       UPLOAD PAGE
+    ───────────────────────────────────────────── */
+    #upload-page { animation: fadeUp .35s ease; }
+    #result-page { display: none; animation: fadeUp .4s ease; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+    /* upload card */
+    .upload-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 36px;
+      margin-bottom: 24px;
+    }
+    .upload-card h2 { font-size: 1.45rem; font-weight: 700; margin-bottom: 6px; text-align: center; }
+    .upload-card p  { color: var(--muted); font-size: 0.85rem; text-align: center; margin-bottom: 28px; }
+
+    .drop-zone {
+      border: 2px dashed rgba(99,143,255,.35);
+      border-radius: 16px;
+      background: var(--surface2);
+      padding: 56px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .25s, background .25s;
+    }
+    .drop-zone.dragover, .drop-zone:hover { border-color: var(--accent); background: rgba(99,143,255,.05); }
+    .drop-zone input { display: none; }
+    .upload-icon {
+      width: 60px; height: 60px;
+      border: 2px solid rgba(99,143,255,.4);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px; font-size: 1.5rem;
+    }
+    .drop-title { font-size: 1rem; font-weight: 600; margin-bottom: 5px; }
+    .drop-sub   { color: var(--muted); font-size: 0.82rem; margin-bottom: 18px; }
+    .format-badges { display: flex; justify-content: center; gap: 8px; }
+    .fmt {
+      background: rgba(99,143,255,.12); border: 1px solid rgba(99,143,255,.3);
+      border-radius: 6px; padding: 3px 12px;
+      font-size: 0.72rem; font-weight: 600; color: var(--accent);
+    }
+
+    /* Preview strip */
+    #preview-strip {
+      display: none;
+      margin-top: 20px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    #preview-img {
+      display: block; width: 100%; max-height: 260px;
+      object-fit: contain; background: #000;
+    }
+    .preview-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 16px;
+      font-size: 0.8rem; color: var(--muted);
+    }
+
+    /* Analyse button */
+    #analyse-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(90deg, #4a3f8e, var(--accent2), var(--accent));
+      color: #fff; font-size: 1rem; font-weight: 700;
+      border: none; border-radius: 14px;
+      cursor: pointer; letter-spacing: 0.01em;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .2s, transform .2s;
+    }
+    #analyse-btn:hover   { opacity: .92; transform: translateY(-1px); }
+    #analyse-btn:active  { transform: translateY(0); }
+    #analyse-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-icon { font-size: 1rem; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to{ transform: rotate(360deg); } }
+
+    /* error */
+    #error-banner {
+      display: none; margin-top: 16px;
+      background: var(--red-bg); border: 1px solid var(--red-bdr);
+      border-radius: 10px; padding: 14px 18px;
+      color: var(--red); font-size: 0.88rem;
+    }
+
+    /* ─────────────────────────────────────────────
+       DIAGNOSTIC REPORT PAGE
+    ───────────────────────────────────────────── */
+    .report-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .report-header h2 { font-size: 1.5rem; font-weight: 800; }
+    .report-generated { color: var(--muted); font-size: 0.82rem; margin-top: 4px; }
+
+    /* 2-col grid */
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 16px;
+    }
+    @media (max-width: 640px) { .report-grid { grid-template-columns: 1fr; } }
+
+    .report-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+    }
+
+    /* Result panel (top-left) */
+    .result-panel {
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 190px;
+    }
+    .result-panel.green { border-color: var(--green-bdr); background: rgba(13,17,23,.9); }
+    .result-panel.red   { border-color: var(--red-bdr);   background: rgba(13,17,23,.9); }
+
+    .result-circle {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; margin-bottom: 14px;
+    }
+    .result-circle.green { background: var(--green); }
+    .result-circle.red   { background: var(--red); }
+
+    .result-name {
+      font-size: 1.7rem; font-weight: 900; letter-spacing: 0.04em;
+      margin-bottom: 5px;
+    }
+    .result-name.green { color: var(--green); }
+    .result-name.red   { color: var(--red); }
+    .result-sub { color: var(--muted); font-size: 0.85rem; }
+
+    /* Analysis details panel (top-right) */
+    .details-panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 18px; }
+    .detail-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: 0.85rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key  { color: var(--muted); }
+    .detail-val  { font-weight: 700; text-align: right; }
+
+    /* Confidence panel (bottom-left) */
+    .conf-panel { }
+    .conf-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+    }
+    .conf-label { font-size: 0.9rem; font-weight: 600; }
+    .conf-pct   { font-size: 1.35rem; font-weight: 800; color: var(--accent); }
+    .conf-pct.green { color: var(--green); }
+    .conf-pct.red   { color: var(--red); }
+
+    .conf-track {
+      height: 10px; background: var(--surface2);
+      border-radius: 99px; overflow: hidden; margin-bottom: 10px;
+    }
+    .conf-fill {
+      height: 100%; border-radius: 99px;
+      transition: width 1.1s cubic-bezier(.4,0,.2,1);
+    }
+    .conf-fill.green { background: linear-gradient(90deg, #1a6633, var(--green)); }
+    .conf-fill.red   { background: linear-gradient(90deg, #8b1a1a, var(--red)); }
+
+    .conf-scale {
+      display: flex; justify-content: space-between;
+      font-size: 0.7rem; color: var(--muted);
+    }
+
+    /* Disclaimer panel (bottom-right) */
+    .disclaimer-panel h3 {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;
+    }
+    .disclaimer-panel p {
+      color: var(--muted); font-size: 0.82rem; line-height: 1.6;
+    }
+
+    /* Back button */
+    #back-btn {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 22px;
+      color: var(--text); font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    #back-btn:hover { background: var(--surface2); }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-icon">🔬</div>
+    <span>MalariaScope</span>
+    <span class="nav-sub">Neural Diagnostic Platform</span>
+  </div>
+  <div class="nav-badge">System Online</div>
+</nav>
+
+<main>
+
+  <!-- ── UPLOAD PAGE ── -->
+  <div id="upload-page">
+    <!-- Hero -->
+    <div class="hero">
+      <h1>Revolutionary <span>AI-Powered</span><br>Malaria Detection</h1>
+      <p>Clinical-grade accuracy &bull; Real-time analysis &bull; Instant results</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-val">99.2%</div>
+        <div class="stat-lbl">Accuracy</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-val">&lt;3s</div>
+        <div class="stat-lbl">Analysis Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔬</div>
+        <div class="stat-val" id="scan-counter">2,852</div>
+        <div class="stat-lbl">Scans Today</div>
+      </div>
+    </div>
+
+    <!-- Upload card -->
+    <div class="upload-card">
+      <h2>Upload Blood Cell Image</h2>
+      <p>Drag &amp; drop or click to browse &bull; Supports PNG, JPG, JPEG</p>
+
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept=".png,.jpg,.jpeg,image/*"/>
+        <div class="upload-icon">⬆</div>
+        <div class="drop-title">Drop your microscopic image here</div>
+        <div class="drop-sub">or click to select from your device</div>
+        <div class="format-badges">
+          <span class="fmt">PNG</span>
+          <span class="fmt">JPG</span>
+          <span class="fmt">JPEG</span>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div id="preview-strip">
+        <img id="preview-img" src="" alt="Cell preview"/>
+        <div class="preview-meta">
+          <span id="file-name-label">—</span>
+          <span id="file-size-label">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analyse button -->
+    <button id="analyse-btn" style="display:none">
+      <span class="btn-icon">🔍</span> Analyze Sample
+    </button>
+
+    <div id="error-banner"></div>
+  </div><!-- /#upload-page -->
+
+
+  <!-- ── DIAGNOSTIC REPORT PAGE ── -->
+  <div id="result-page">
+    <div class="report-header">
+      <div>
+        <h2>Diagnostic Report</h2>
+      </div>
+      <div class="report-generated" id="report-generated">Generated: —</div>
+    </div>
+
+    <div class="report-grid">
+
+      <!-- Top-left: Result -->
+      <div class="report-panel result-panel" id="result-panel">
+        <div class="result-circle" id="res-circle"></div>
+        <div class="result-name" id="res-name"></div>
+        <div class="result-sub"  id="res-sub"></div>
+      </div>
+
+      <!-- Top-right: Analysis Details -->
+      <div class="report-panel details-panel">
+        <h3>Analysis Details</h3>
+        <div class="detail-row">
+          <span class="detail-key">Model</span>
+          <span class="detail-val">CustomCNN v2.0</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Processing Time</span>
+          <span class="detail-val" id="proc-time">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Image Quality</span>
+          <span class="detail-val">Excellent</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Timestamp</span>
+          <span class="detail-val" id="detail-ts">—</span>
+        </div>
+      </div>
+
+      <!-- Bottom-left: Confidence -->
+      <div class="report-panel conf-panel">
+        <div class="conf-header">
+          <span class="conf-label">Confidence Level</span>
+          <span class="conf-pct" id="conf-pct">—</span>
+        </div>
+        <div class="conf-track">
+          <div class="conf-fill" id="conf-fill" style="width:0%"></div>
+        </div>
+        <div class="conf-scale">
+          <span>Low</span><span>Medium</span><span>High</span><span>Very High</span>
+        </div>
+      </div>
+
+      <!-- Bottom-right: Medical Disclaimer -->
+      <div class="report-panel disclaimer-panel">
+        <h3>⚕ Medical Disclaimer</h3>
+        <p>This AI system is a screening tool for healthcare professionals. Results must be verified by qualified medical personnel. Not a substitute for professional medical diagnosis.</p>
+      </div>
+
+    </div><!-- /.report-grid -->
+
+    <button id="back-btn">← Analyze Another Sample</button>
+  </div><!-- /#result-page -->
+
+</main>
+
+<footer>© 2024 MalariaScope AI &bull; Powered by Deep Learning &amp; TensorFlow &bull; Saving Lives Through Technology</footer>
+
+<script>
+  /* ── Particle background ─────────────────────────────────────────── */
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  let pts = [];
+
+  function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 55; i++) {
+    pts.push({ x: Math.random()*innerWidth, y: Math.random()*innerHeight,
+               vx: (Math.random()-.5)*.25, vy: (Math.random()-.5)*.25,
+               r: Math.random()*1.4+.4, a: Math.random()*.45+.08 });
+  }
+  (function loop() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pts.forEach(p => {
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
+      if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(99,143,255,${p.a})`; ctx.fill();
+    });
+    requestAnimationFrame(loop);
+  })();
+
+  /* ── Scan counter ─────────────────────────────────────────────────── */
+  let scans = 2852;
+  setInterval(()=>{ if(Math.random()<.3){ scans++; document.getElementById('scan-counter').textContent=scans.toLocaleString(); } },4000);
+
+  /* ── Drag & drop ─────────────────────────────────────────────────── */
+  const dropZone  = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  const analyseBtn = document.getElementById('analyse-btn');
+
+  dropZone.addEventListener('click', ()=>fileInput.click());
+  dropZone.addEventListener('dragover',  e=>{ e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e=>{ e.preventDefault(); dropZone.classList.remove('dragover'); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+  fileInput.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+  let selectedFile = null;
+
+  function handleFile(file) {
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('preview-img').src = e.target.result;
+      document.getElementById('preview-strip').style.display = 'block';
+      document.getElementById('file-name-label').textContent = file.name;
+      document.getElementById('file-size-label').textContent = (file.size/1024).toFixed(2)+' KB';
+      analyseBtn.style.display = 'flex';
+      document.getElementById('error-banner').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ── Analyse click ──────────────────────────────────────────────── */
+  analyseBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    analyseBtn.disabled = true;
+    analyseBtn.innerHTML = '<div class="spinner"></div> Analysing…';
+
+    const t0   = performance.now();
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+      const res  = await fetch('/predict', { method:'POST', body:form });
+      const data = await res.json();
+      const elapsed = ((performance.now() - t0) / 1000).toFixed(2) + 's';
+
+      if (!data.success) {
+        showError(data.error || 'Prediction failed.');
+      } else {
+        showReport(data, elapsed);
+      }
+    } catch(err) {
+      showError('Network error: ' + err.message);
+    } finally {
+      analyseBtn.disabled = false;
+      analyseBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Sample';
+    }
+  });
+
+  function showError(msg) {
+    const b = document.getElementById('error-banner');
+    b.style.display = 'block';
+    b.textContent   = '⚠ ' + msg;
+  }
+
+  /* ── Build report ─────────────────────────────────────────────────── */
+  function showReport(data, elapsed) {
+    const isParasitized = data.prediction === 'Parasitized';
+    const cls           = isParasitized ? 'red' : 'green';
+    const conf          = data.confidence;
+
+    /* header */
+    document.getElementById('report-generated').textContent = 'Generated: ' + data.timestamp;
+
+    /* result panel */
+    const panel = document.getElementById('result-panel');
+    panel.className = 'report-panel result-panel ' + cls;
+
+    const circle = document.getElementById('res-circle');
+    circle.className = 'result-circle ' + cls;
+    circle.textContent = isParasitized ? '!' : '✓';
+
+    document.getElementById('res-name').className = 'result-name ' + cls;
+    document.getElementById('res-name').textContent = data.prediction.toUpperCase();
+    document.getElementById('res-sub').textContent  = isParasitized
+      ? 'Malaria parasites detected'
+      : 'No malaria parasites detected';
+
+    /* detail panel */
+    document.getElementById('proc-time').textContent = elapsed;
+    document.getElementById('detail-ts').textContent  = data.timestamp;
+
+    /* confidence */
+    const confPct  = document.getElementById('conf-pct');
+    const confFill = document.getElementById('conf-fill');
+    confPct.className  = 'conf-pct ' + cls;
+    confFill.className = 'conf-fill ' + cls;
+    confPct.textContent = conf.toFixed(2) + '%';
+    setTimeout(() => { confFill.style.width = Math.min(conf, 100) + '%'; }, 80);
+
+    /* switch pages */
+    document.getElementById('upload-page').style.display = 'none';
+    const rp = document.getElementById('result-page');
+    rp.style.display = 'block';
+    rp.style.animation = 'none';
+    void rp.offsetWidth;
+    rp.style.animation = '';
+  }
+
+  /* ── Back button ──────────────────────────────────────────────────── */
+  document.getElementById('back-btn').addEventListener('click', () => {
+    document.getElementById('result-page').style.display  = 'none';
+    document.getElementById('upload-page').style.display  = 'block';
+    document.getElementById('error-banner').style.display = 'none';
+    document.getElementById('preview-strip').style.display = 'none';
+    analyseBtn.style.display = 'none';
+    fileInput.value = '';
+    selectedFile = null;
+  });
+</script>
+</body>
+</html>

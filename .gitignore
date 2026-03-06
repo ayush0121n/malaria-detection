@@ -1,0 +1,42 @@
+# ── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# ── Virtual environments ─────────────────────────────────
+venv/
+env/
+.env/
+.venv/
+
+# ── Jupyter ──────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Large model files (tracked via Git LFS or excluded) ──
+# Uncomment the line below to EXCLUDE model files entirely,
+# or run: git lfs track "*.h5" to track them with Git LFS
+# *.h5
+
+# ── Dataset / temp / OS ──────────────────────────────────
+*.csv
+*.zip
+*.tar.gz
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Flask / deployment ───────────────────────────────────
+instance/
+.webassets-cache
