@@ -33,7 +33,7 @@
 
 ## 🧬 Overview
 
-**MalariaScope** is a complete end-to-end deep learning project that classifies blood-smear microscopic cell images as either **Parasitized** (infected with malaria) or **Uninfected** using convolutional neural networks.
+**MalariaScope** is a complete end-to-end deep learning project that classifies blood-smear microscopic cell images as either **Parasitized** (infected with malaria) or **Uninfected** using convolutional neural networks..
 
 The project includes:
 - A **full ML training pipeline** (`malaria_detection.py`) covering data loading, preprocessing, model building, training, evaluation, and inference
