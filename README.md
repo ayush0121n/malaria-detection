@@ -21,7 +21,6 @@
 - [Demo](#-demo)
 - [Models](#-models)
 - [Dataset](#-dataset)
-- [Setup & Installation](#-setup--installation)
 - [Running the Project](#-running-the-project)
 - [API Reference](#-api-reference)
 - [Configuration](#️-configuration)
@@ -142,61 +141,6 @@ The dataset is automatically downloaded from Kaggle via `kagglehub` when you run
 
 ---
 
-## ⚙️ Setup & Installation
-
-### Prerequisites
-
-| Requirement | Version |
-|-------------|---------|
-| Python | 3.9 – 3.13 |
-| pip | Latest |
-| Kaggle Account | Required for dataset download |
-
-### Step 1 — Clone the Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/malaria-detection.git
-cd malaria-detection
-```
-
-### Step 2 — Create a Virtual Environment (Recommended)
-
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# macOS / Linux
-python -m venv venv
-source venv/bin/activate
-```
-
-### Step 3 — Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Step 4 — Configure Kaggle API Credentials
-
-> Only needed if you want to **retrain** the models. Skip if using the pre-trained `.h5` files.
-
-1. Go to [kaggle.com/settings](https://www.kaggle.com/settings) → **API** → **Create New Token**
-2. This downloads `kaggle.json`
-3. Place it at:
-   - **Windows:** `C:\Users\<YourName>\.kaggle\kaggle.json`
-   - **macOS/Linux:** `~/.kaggle/kaggle.json`
-4. Set permissions (macOS/Linux only): `chmod 600 ~/.kaggle/kaggle.json`
-
-The file should look like:
-```json
-{
-  "username": "your_kaggle_username",
-  "key": "your_api_key_here"
-}
-```
-
----
 
 ## 🚀 Running the Project
 
