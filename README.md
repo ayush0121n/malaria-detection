@@ -21,14 +21,12 @@
 - [Demo](#-demo)
 - [Models](#-models)
 - [Dataset](#-dataset)
-- [Activities / Pipeline](#-activities--pipeline)
 - [Setup & Installation](#-setup--installation)
 - [Running the Project](#-running-the-project)
 - [API Reference](#-api-reference)
 - [Configuration](#️-configuration)
 - [Results](#-results)
 - [Tech Stack](#-tech-stack)
-- [Troubleshooting](#-troubleshooting)
 - [License](#-license)
 
 ---
@@ -141,52 +139,6 @@ Input (64×64×3)
 | **Used in training** | Up to 6,000 (3,000 per class, configurable) |
 
 The dataset is automatically downloaded from Kaggle via `kagglehub` when you run `malaria_detection.py`.
-
----
-
-## 🛠️ Activities / Pipeline
-
-The training script `malaria_detection.py` is organized into **7 activities**:
-
-### Activity 2.1 — Importing Libraries
-Imports all required packages: NumPy, Pandas, Matplotlib, Seaborn, Pillow, Scikit-learn, SciPy, TensorFlow/Keras, and KaggleHub.
-
-### Activity 2.2 — Reading the Dataset
-- Downloads the Kaggle dataset using `kagglehub.dataset_download()`
-- Walks the directory tree to build a `DataFrame` of `(filepath, label)` pairs
-- Subsamples up to `MAX_SAMPLES_PER_CLASS = 3000` images per class for fast CPU training
-
-### Activity 2.3 — Data Preprocessing & Augmentation
-- Stratified 80/20 train/validation split
-- **Training augmentation:** rotation(20°), width/height shift(0.1), shear(0.1), zoom(0.1), horizontal flip
-- **Validation:** rescale only (no augmentation)
-- All images resized to `IMG_SIZE = (64, 64)`
-
-### Activity 2.4 — Model Building
-Three models are built:
-1. `create_custom_cnn()` — 4-block CNN from scratch
-2. `create_transfer_model("MobileNetV2")` — frozen ImageNet weights + custom head
-3. `create_transfer_model("EfficientNetB0")` — frozen ImageNet weights + custom head
-
-### Activity 2.5 — Model Training
-Each model is compiled with:
-- **Optimizer:** Adam(lr=1e-4)
-- **Loss:** Binary Crossentropy
-- **Metrics:** Accuracy, Precision, Recall
-- **Callbacks:** ModelCheckpoint, EarlyStopping(patience=10), ReduceLROnPlateau(factor=0.5, patience=5)
-
-### Activity 2.6 — Evaluation & Visualisation
-For each trained model:
-- Plots accuracy & loss curves → saved as `{model}_training_history.png`
-- Prints classification report (precision, recall, F1)
-- Confusion matrix heatmap → saved as `{model}_confusion_matrix.png`
-- ROC-AUC curve → saved as `{model}_roc_curve.png`
-
-### Activity 2.7 — Prediction / Inference
-Defines `predict_image(image_path, model)` helper:
-- Loads image, converts to RGB
-- Auto-detects required size from `model.input_shape`
-- Returns `(label, probability)` tuple
 
 ---
 
